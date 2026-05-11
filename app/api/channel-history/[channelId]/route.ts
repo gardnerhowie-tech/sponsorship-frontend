@@ -24,8 +24,10 @@ export async function GET(
     const auth =
       new google.auth.GoogleAuth({
 
-        keyFile:
-          "/Users/macbook/Desktop/sponsorship matching/Host Responsiveness/sheets-service-account.json",
+        credentials: JSON.parse(
+          process.env
+            .GOOGLE_SERVICE_ACCOUNT || "{}"
+        ),
 
         scopes: [
           "https://www.googleapis.com/auth/spreadsheets.readonly",
@@ -41,9 +43,11 @@ export async function GET(
     const response =
       await sheets.spreadsheets.values.get({
 
-        spreadsheetId: SHEET_ID,
+        spreadsheetId:
+          SHEET_ID,
 
-        range: `${SHEET_NAME}!A:Z`,
+        range:
+          `${SHEET_NAME}!A:Z`,
       });
 
     const rows =
@@ -57,27 +61,34 @@ export async function GET(
       });
     }
 
-    const headers = rows[0];
+    const headers =
+      rows[0];
 
-    const dataRows = rows.slice(1);
+    const dataRows =
+      rows.slice(1);
 
-    const matches = dataRows
-      .filter((row) => row[0] === channelId)
-      .map((row) => {
+    const matches =
+      dataRows
+        .filter(
+          (row) =>
+            row[0] === channelId
+        )
 
-        const result:
-          Record<string, any> = {};
+        .map((row) => {
 
-        headers.forEach(
-          (header, index) => {
+          const result:
+            Record<string, any> = {};
 
-            result[header] =
-              row[index];
-          }
-        );
+          headers.forEach(
+            (header, index) => {
 
-        return result;
-      });
+              result[header] =
+                row[index];
+            }
+          );
+
+          return result;
+        });
 
     return NextResponse.json({
       success: true,
