@@ -179,7 +179,7 @@ if (!orchestrationResponse.ok) {
 }
 
 await new Promise((resolve) =>
-  setTimeout(resolve, 15000)
+  setTimeout(resolve, 25000)
 );
 
     scanState[channel_id] = {
