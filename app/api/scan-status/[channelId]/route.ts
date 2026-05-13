@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { scanState } from "../../_api_scan_backup/scanState";
+import { scanState } from "../../scan/scanState";
 
 export async function GET(
   request: Request,

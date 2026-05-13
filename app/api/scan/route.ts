@@ -1,6 +1,5 @@
 import { scanState } from "./scanState";
 import { NextResponse } from "next/server";
-import { spawn } from "child_process";
 import { google } from "googleapis";
 
 const SHEET_ID = "14tYjvqaTJeNBe0AwhxIEPj6RjfKdudhV5QzRFfpAf0E";
@@ -130,47 +129,6 @@ function applyTelemetry(channelId: string, text: string) {
   }
 }
 
-async function runScanProcess(channelId: string) {
-  return new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      "node",
-      ["scanController.js", channelId],
-      {
-        cwd: "/Users/macbook/Desktop/sponsorship matching/orchestration",
-        shell: false,
-      }
-    );
-
-    child.stdout.on("data", (data) => {
-      const text = data.toString();
-
-      process.stdout.write(text);
-
-      applyTelemetry(channelId, text);
-    });
-
-    child.stderr.on("data", (data) => {
-      const text = data.toString();
-
-      process.stderr.write(text);
-
-      applyTelemetry(channelId, text);
-    });
-
-    child.on("error", (error) => {
-      reject(error);
-    });
-
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Scan process failed with code ${code}`));
-      }
-    });
-  });
-}
-
 export async function POST(req: Request) {
   let channel_id = "";
 
@@ -203,7 +161,26 @@ export async function POST(req: Request) {
       complete: false,
     };
 
-    await runScanProcess(channel_id);
+    const orchestrationResponse = await fetch(
+  "https://sponsorship-orchestration-production.up.railway.app/scan",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      channel_id,
+    }),
+  }
+);
+
+if (!orchestrationResponse.ok) {
+  throw new Error("Failed to start orchestration scan");
+}
+
+await new Promise((resolve) =>
+  setTimeout(resolve, 15000)
+);
 
     scanState[channel_id] = {
       stage: "Reading Intelligence Profile",
