@@ -1,18 +1,16 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
 
-const nextConfig: NextConfig = {
+  outputFileTracingRoot: __dirname,
+
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "yt3.ggpht.com",
       },
-      {
-        protocol: "https",
-        hostname: "yt3.googleusercontent.com",
-      },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
