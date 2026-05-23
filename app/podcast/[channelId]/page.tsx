@@ -172,8 +172,6 @@ export default async function PodcastProfilePage({
           history={history}
         />
 
-        <TrustEvolution history={history} />
-
         <TrustSignals signals={trustSignals} />
 
         <section className="border border-black/10">
