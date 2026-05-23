@@ -15,19 +15,22 @@ export async function GET(
     }>;
   }
 ) {
-
   try {
-
     const { channelId } =
       await context.params;
 
     const auth =
       new google.auth.GoogleAuth({
+        credentials: {
+          client_email:
+            process.env.GOOGLE_CLIENT_EMAIL,
 
-        credentials: JSON.parse(
-          process.env
-            .GOOGLE_SERVICE_ACCOUNT || "{}"
-        ),
+          private_key:
+            process.env.GOOGLE_PRIVATE_KEY?.replace(
+              /\\n/g,
+              "\n"
+            ),
+        },
 
         scopes: [
           "https://www.googleapis.com/auth/spreadsheets.readonly",
@@ -42,7 +45,6 @@ export async function GET(
 
     const response =
       await sheets.spreadsheets.values.get({
-
         spreadsheetId:
           SHEET_ID,
 
@@ -54,7 +56,6 @@ export async function GET(
       response.data.values || [];
 
     if (rows.length < 2) {
-
       return NextResponse.json({
         success: true,
         history: [],
@@ -73,15 +74,12 @@ export async function GET(
           (row) =>
             row[0] === channelId
         )
-
         .map((row) => {
-
           const result:
             Record<string, any> = {};
 
           headers.forEach(
             (header, index) => {
-
               result[header] =
                 row[index];
             }
@@ -96,7 +94,6 @@ export async function GET(
     });
 
   } catch (error: any) {
-
     console.error(error);
 
     return NextResponse.json(
