@@ -24,10 +24,17 @@ export async function GET(
     const auth =
       new google.auth.GoogleAuth({
 
-        credentials: JSON.parse(
-          process.env
-            .GOOGLE_SERVICE_ACCOUNT || "{}"
-        ),
+        credentials: {
+
+          client_email:
+            process.env.GOOGLE_CLIENT_EMAIL,
+
+          private_key:
+            process.env.GOOGLE_PRIVATE_KEY?.replace(
+              /\\n/g,
+              "\n"
+            ),
+        },
 
         scopes: [
           "https://www.googleapis.com/auth/spreadsheets.readonly",
@@ -55,8 +62,16 @@ export async function GET(
 
     if (rows.length < 2) {
 
-      throw new Error(
-        "CHANNEL_MASTER empty"
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "CHANNEL_MASTER empty",
+          ready: false,
+        },
+        {
+          status: 200,
+        }
       );
     }
 
@@ -79,9 +94,10 @@ export async function GET(
           success: false,
           error:
             "Channel not found",
+          ready: false,
         },
         {
-          status: 404,
+          status: 200,
         }
       );
     }
@@ -97,8 +113,28 @@ export async function GET(
       }
     );
 
+    const hasTrustScore =
+      result.trust_index_score !== undefined &&
+      result.trust_index_score !== "";
+
+    if (!hasTrustScore) {
+
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Channel profile not ready",
+          ready: false,
+        },
+        {
+          status: 200,
+        }
+      );
+    }
+
     return NextResponse.json({
       success: true,
+      ready: true,
       data: result,
     });
 
@@ -109,6 +145,7 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
+        ready: false,
         error:
           error.message ||
           "Failed to fetch channel",

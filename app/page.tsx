@@ -76,6 +76,73 @@ export default function Home() {
     return null;
   }
 
+  async function waitForChannelProfile(channel_id: string) {
+
+    for (let attempt = 0; attempt < 60; attempt++) {
+
+      const progressValue = Math.min(
+        95,
+        10 + attempt * 2
+      );
+
+      setScanStatus({
+        stage:
+          attempt < 10
+            ? "Building Audience Dataset"
+            : attempt < 30
+              ? "Running Signal Analysis"
+              : "Assembling Intelligence Profile",
+        detail: "Waiting for CHANNEL_MASTER to update",
+        progress: progressValue,
+        complete: false,
+      });
+
+      try {
+
+        const response = await fetch(
+          "/api/channels",
+          {
+            cache: "no-store",
+          }
+        );
+
+        const json = await response.json();
+
+        if (json.success) {
+
+          const match = json.data?.find(
+            (channel: any) =>
+              channel.channel_id === channel_id &&
+              channel.trust_index_score !== undefined &&
+              channel.trust_index_score !== ""
+          );
+
+          if (match) {
+
+            setScanStatus({
+              stage: "Intelligence Profile Ready",
+              detail: "CHANNEL_MASTER updated",
+              progress: 100,
+              complete: true,
+            });
+
+            return match;
+          }
+
+        }
+
+      } catch (err) {
+        console.error(err);
+      }
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 5000)
+      );
+    }
+
+    return null;
+  }
+
   async function handleScan() {
 
     try {
@@ -93,31 +160,12 @@ export default function Home() {
 
       setLoading(true);
 
-      const interval = setInterval(async () => {
-
-        try {
-
-          const statusRes = await fetch(
-            `/api/scan-status/${resolved.channel_id}`
-          );
-
-          const statusJson = await statusRes.json();
-
-          if (statusJson.success) {
-
-            setScanStatus(statusJson.data);
-
-            if (statusJson.data?.complete) {
-              clearInterval(interval);
-            }
-
-          }
-
-        } catch (err) {
-          console.error(err);
-        }
-
-      }, 1000);
+      setScanStatus({
+        stage: "Initialising Scan",
+        detail: "Preparing orchestration pipeline",
+        progress: 5,
+        complete: false,
+      });
 
       const response = await fetch("/api/scan", {
 
@@ -137,6 +185,13 @@ export default function Home() {
 
       if (!data.success) {
         throw new Error(data.error || "Scan failed");
+      }
+
+      const profile =
+        await waitForChannelProfile(resolved.channel_id);
+
+      if (!profile) {
+        throw new Error("Profile was not ready before timeout");
       }
 
       window.location.href =
@@ -193,10 +248,20 @@ export default function Home() {
               </h1>
 
               <p className="text-black/55 text-lg leading-relaxed max-w-2xl">
-                Behavioural trust classification for podcast sponsorship evaluation.
-                Built using audience interaction patterns, responsiveness signals,
-                and verified host-submitted data.
+                A behavioural intelligence layer for podcast sponsorship evaluation.
+                Built on the hypothesis that audience interaction patterns may
+                correlate more strongly with sponsor outcomes than vanity metrics
+                alone.
               </p>
+
+              <p className="text-black/55 text-lg leading-relaxed max-w-2xl">
+                Powered by audience interaction signals, host responsiveness, and
+                verified host-submitted data.
+              </p>
+
+              <div className="inline-flex w-fit border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-amber-700">
+                Currently in testing.
+              </div>
 
             </div>
 

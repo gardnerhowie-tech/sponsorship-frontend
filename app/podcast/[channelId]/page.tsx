@@ -4,7 +4,6 @@ import TrustClassification from "@/components/profile/TrustClassification";
 import TrustSignals from "@/components/profile/TrustSignals";
 import AudienceContext from "@/components/profile/AudienceContext";
 import VerificationCTA from "@/components/profile/VerificationCTA";
-import TrustEvolution from "@/components/profile/TrustEvolution";
 
 type Props = {
   params: Promise<{
@@ -37,17 +36,21 @@ export default async function PodcastProfilePage({
 
   const { channelId } = await params;
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/channel/${channelId}`,
+    `${baseUrl}/api/channel/${channelId}`,
     {
       cache: "no-store",
     }
   );
 
-  const json = await response.json();
+  const json =
+    await response.json();
 
   const rawResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/raw-classifications/${channelId}`,
+    `${baseUrl}/api/raw-classifications/${channelId}`,
     {
       cache: "no-store",
     }
@@ -60,7 +63,7 @@ export default async function PodcastProfilePage({
     rawJson.data || {};
 
   const historyResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/channel-history/${channelId}`,
+    `${baseUrl}/api/channel-history/${channelId}`,
     {
       cache: "no-store",
     }
